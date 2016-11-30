@@ -15,6 +15,9 @@ import subprocess
 import multiprocessing
 import shutil
 import time
+import random
+
+
 
 def make_keras_model(n_hidden_layers, dimof_middle, dimof_input):
 	#This function sets up a neural network
@@ -123,24 +126,49 @@ def optimise_job(expt,nclf,out_q):
         out_q.put(nclf)
         print(multiprocessing.current_process().name, " : ",nclf.name ," Finishing")
 
+def plot_2D_opt_graph(expt,nclf):
+
+        class_name = nclf.name
+        name = expt.name_CPV.format(expt.optimisation_dimension)
+
+	self_name_CPV= expt.name_CPV
+
+        filename= nclf.name +"_"+ self_name_CPV.format(expt.optimisation_dimension)+"_optimisation_values"
+        data=np.loadtxt(filename+".txt",dtype='d')
+        number_of_iterations = data.shape[0]
+        if number_of_iterations > expt.number_of_iterations: number_of_iterations = expt.number_of_iterations
+
+	data = data[:number_of_iterations,:]
+        z=data[:number_of_iterations,-1]
+
+        index = np.argmin(z)
+        #val_max = [x[index],y[index],z[index]]
+	val_max = data[index,:]
+
+        with open(filename+"_best.txt",'w') as best_file:
+		for v in val_max:
+                	best_file.write(str(v)+'\t')
+		best_file.write('\n')
+
+        return val_max
 
 class experiment(object):
 	#A class with which the optimisation can be performed
         def __init__(self,**kwargs):
 
-                self.nclf_list          = kwargs.get('nclf_list',[nclf()])
+                self.nclf_list          = kwargs.get('nclf_list', [name_to_nclf("bdt"), name_to_nclf("xgb"), name_to_nclf("svm"), name_to_nclf("nn")])
                 self.file_name_patterns = kwargs.get('file_name_patterns') 
-		self.name_CPV           = kwargs.get('name_CPV',"{0}Dname_CPV")
-                self.directory_name     = kwargs.get('directory_name',"")
+		self.name_CPV           = kwargs.get('name_CPV',"{0}D_gauss")
+                self.directory_name     = kwargs.get('directory_name',"_gauss")
 
 
         def set_nclf_list(self,nclf_list):                      self.nclf_list=nclf_list
 
         def optimise(self,**kwargs):
 
-                self.optimisation_dimension     = kwargs.get('optimisation_dimension',2)
+                self.optimisation_dimension     = kwargs.get('optimisation_dimension',4)
                 self.keras_optimisation_dimension = kwargs.get('keras_optimisation_dimension',self.optimisation_dimension)
-                self.number_of_iterations       = kwargs.get('number_of_iterations',50)
+                self.number_of_iterations       = kwargs.get('number_of_iterations',5)
                 self.spearmint_directory        = kwargs.get('spearmint_directory', "/Users/weisser/Documents/Spearmint-master/spearmint")
 
                 opt_dir = "optimisation"+self.directory_name
@@ -150,7 +178,8 @@ class experiment(object):
 
                 print(os.getcwd())
                 #os.system(os.environ['learningml']+"/GoF/reinitialise_spearmint.sh")
-		os.system("../reinitialise_spearmint.sh")
+		dir_path = os.path.dirname(os.path.realpath(__file__))
+		os.system(dir_path+"/reinitialise_spearmint.sh")
 
                 if os.path.exists("MongoDB_bookkeeping"):
                         shutil.rmtree("MongoDB_bookkeeping")
@@ -179,6 +208,8 @@ class experiment(object):
                 classifier_content = 'import os \nimport signal \nimport numpy as np \nimport math \nimport sys \n'
 		#classifier_content += 'sys.path.insert(0,os.environ["learningml"]+"/optimise_hyperparam") \n'
 		classifier_content += 'sys.path.insert(0,"../..") \n'
+		dir_path = os.path.dirname(os.path.realpath(__file__))
+		classifier_content += "sys.path.insert(0, '{}') \n".format(dir_path)
 		classifier_content += 'import os \nimport setup_optimise_hyperparam \nfrom sklearn.tree import DecisionTreeClassifier \nfrom sklearn.ensemble import AdaBoostClassifier \nfrom sklearn.svm import SVC \nfrom keras.wrappers.scikit_learn import KerasClassifier \nfrom rep.estimators import XGBoostClassifier \n# Write a function like this called "main" \ndef main(job_id, params): \n\tprint "Anything printed here will end up in the output directory for job ", job_id \n\tprint params \n\n'
                 classifier_content += '\tif job_id>{}:file = open("optimisation_done_flag", "a").close()\n\n'.format(self.number_of_iterations)
                 #classifier_content += '\tassert (job_id<{}), "Final number of iterations reached" \n\n'.format(1+self.number_of_iterations)
@@ -210,7 +241,7 @@ class experiment(object):
 
 
         def write_config(self,nclf):
-                config_content = '{{\n    "language"        : "PYTHON",\n    "main-file"       : "classifier_eval_wrapper.py",\n    "experiment-name" : "{}_{}",\n    "likelihood"      : "NOISELESS",\n    "variables" : {{'.format(nclf.name,self.name_CPV.format(self.optimisation_dimension))
+                config_content = '{{\n    "language"        : "PYTHON",\n    "main-file"       : "classifier_eval_wrapper.py",\n    "experiment-name" : "{}_{}_{}",\n    "likelihood"      : "NOISELESS",\n    "variables" : {{'.format(nclf.name,self.name_CPV.format(self.optimisation_dimension),str(random.randint(1,10000)))
                 for param_index, param in enumerate(nclf.param_list):
                         config_content += '\n        "{}" : {{\n            "type" : "'.format(param)
                         lower_lim, upper_lim = nclf.range_list[param_index]

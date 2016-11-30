@@ -11,10 +11,10 @@ from keras.wrappers.scikit_learn import KerasClassifier
 def spearmint_example():
 
 	#Quick start. Use the predefined classifiers
-	#nclf_list = [name_to_nclf("bdt"), name_to_nclf("xgb"), name_to_nclf("svm"), name_to_nclf("nn")]
+	nclf_list = [name_to_nclf("bdt"), name_to_nclf("xgb"), name_to_nclf("svm"), name_to_nclf("nn")]
 
 	#Or specify your classifiers yourself
-	nclf_list = [nclf('xgb',XGBoostClassifier(), ['n_estimators','eta','max_depth'], [[10,1000],[0.01,1.0],[2,10]])]
+	#nclf_list = [nclf('xgb',XGBoostClassifier(), ['n_estimators','eta','max_depth'], [[10,1000],[0.01,1.0],[2,10]])]
 
 	name= "{0}D_gauss"
 
@@ -24,10 +24,13 @@ def spearmint_example():
 
 	directory_name = "_gauss"
 
-	#expt = experiment(nclf_list=nclf_list, file_name_patterns=file_name_patterns, scoring='chi2',single_no_bins_list = [5], name_CPV=name, directory_name=directory_name)
-	expt = experiment(nclf_list=nclf_list, file_name_patterns=file_name_patterns, name_CPV=name, directory_name=directory_name)
+	spearmint_directory = "/Users/weisser/Documents/Spearmint-master/spearmint"
+	keras_optimisation_dimension = 4
 
-	expt.optimise(number_of_iterations=50)
+	#expt = experiment(nclf_list=nclf_list, file_name_patterns=file_name_patterns, scoring='chi2',single_no_bins_list = [5], name_CPV=name, directory_name=directory_name)
+	expt = experiment(nclf_list=nclf_list, file_name_patterns=file_name_patterns, name_CPV=name, directory_name=directory_name, spearmint_directory=spearmint_directory)
+
+	expt.optimise(number_of_iterations=5, keras_optimisation_dimension=keras_optimisation_dimension)
 
 if __name__ == "__main__":
 	spearmint_example()
