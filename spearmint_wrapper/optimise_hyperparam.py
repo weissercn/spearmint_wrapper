@@ -14,6 +14,7 @@ def spearmint_example():
 	nclf_list = [name_to_nclf("bdt"), name_to_nclf("xgb"), name_to_nclf("svm"), name_to_nclf("nn")]
 
 	#Or specify your classifiers yourself
+	#                   name, classifier,          list of parameters to optimise,     list of ranges for these parameters
 	#nclf_list = [nclf('xgb',XGBoostClassifier(), ['n_estimators','eta','max_depth'], [[10,1000],[0.01,1.0],[2,10]])]
 
 	name= "{0}D_gauss"

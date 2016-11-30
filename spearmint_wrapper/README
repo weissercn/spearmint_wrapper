@@ -31,8 +31,10 @@ Optional
 
 1. Supply your own data sets as tab separated text files and update their names in optimise_hyperparam. The first file contains data points of class 1. The second file contains data points of class 2. The machine learning algorithms try to learn the difference between these two classes.
 
-2. Write a customised Keras model by updating make_keras_model in setup_optimise_hyperparam.py
+2. Specify which classifiers to optimise, which parameters to optimise, and what the allowed ranges for each of these parameters are. For that follow the example of xgb in optimise_hyperparam.py
 
-3. Write a customised score function (this is the criterion that determines when the machine learning algorithms have done well) by updating classifier_eval in setup_optimise_hyperparam.py
+3. Write a customised Keras model by updating make_keras_model in setup_optimise_hyperparam.py
+
+4. Write a customised score function (this is the criterion that determines when the machine learning algorithms have done well) by updating classifier_eval in setup_optimise_hyperparam.py
 
 
